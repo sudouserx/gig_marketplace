@@ -1,0 +1,902 @@
+// lib/widgets/custom_button.dart
+import 'package:flutter/material.dart';
+
+class CustomButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onPressed;
+  final bool isLoading;
+  final bool isDisabled;
+  final Color? backgroundColor;
+  final Color? textColor;
+  final double? width;
+  final double height;
+  final IconData? icon;
+
+  const CustomButton({
+    Key? key,
+    required this.text,
+    required this.onPressed,
+    this.isLoading = false,
+    this.isDisabled = false,
+    this.backgroundColor,
+    this.textColor,
+    this.width,
+    this.height = 50,
+    this.icon,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width ?? double.infinity,
+      height: height,
+      child: ElevatedButton(
+        onPressed: (isLoading || isDisabled) ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: textColor,
+          disabledBackgroundColor: Colors.grey[300],
+        ),
+        child: isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(text),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+// lib/widgets/input_field.dart
+import 'package:flutter/material.dart';
+
+class InputField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final bool obscureText;
+  final TextInputType keyboardType;
+  final String? Function(String?)? validator;
+  final bool isRequired;
+  final IconData? prefixIcon;
+  final Widget? suffixIcon;
+  final int maxLines;
+  final int? maxLength;
+  final void Function(String)? onChanged;
+
+  const InputField({
+    Key? key,
+    required this.label,
+    required this.controller,
+    this.obscureText = false,
+    this.keyboardType = TextInputType.text,
+    this.validator,
+    this.isRequired = false,
+    this.prefixIcon,
+    this.suffixIcon,
+    this.maxLines = 1,
+    this.maxLength,
+    this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        maxLength: maxLength,
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          labelText: isRequired ? '$label *' : label,
+          prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+          suffixIcon: suffixIcon,
+        ),
+        validator: validator ?? (isRequired 
+          ? (value) => value == null || value.isEmpty ? 'This field is required' : null
+          : null),
+      ),
+    );
+  }
+}
+
+// lib/widgets/form_container.dart
+import 'package:flutter/material.dart';
+
+class FormContainer extends StatelessWidget {
+  final List<Widget> children;
+  final String? title;
+
+  const FormContainer({
+    Key? key,
+    required this.children,
+    this.title,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null) ...[
+            Text(
+              title!,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+// lib/widgets/loading_indicator.dart
+import 'package:flutter/material.dart';
+
+class LoadingIndicator extends StatelessWidget {
+  final String? message;
+
+  const LoadingIndicator({
+    Key? key,
+    this.message,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          if (message != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              message!,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// lib/widgets/error_display.dart
+import 'package:flutter/material.dart';
+
+class ErrorDisplay extends StatelessWidget {
+  final String errorMessage;
+  final VoidCallback? onRetry;
+
+  const ErrorDisplay({
+    Key? key,
+    required this.errorMessage,
+    this.onRetry,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.red,
+              size: 60,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.red,
+              ),
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onRetry,
+                child: const Text('Retry'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// lib/widgets/job_card.dart
+import 'package:flutter/material.dart';
+import 'package:gig_marketplace/models/job.dart';
+
+class JobCard extends StatelessWidget {
+  final Job job;
+  final VoidCallback onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final VoidCallback? onApply;
+  final bool isEmployer;
+
+  const JobCard({
+    Key? key,
+    required this.job,
+    required this.onTap,
+    this.onEdit,
+    this.onDelete,
+    this.onApply,
+    required this.isEmployer,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 2,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      job.title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  _buildStatusChip(job.status),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                job.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Icons.category, size: 16, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Text(
+                    job.category,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Text(
+                    job.isRemote ? 'Remote' : job.location,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Deadline: ${job.formattedDeadline}',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (job.budget != null) ...[
+                    Row(
+                      children: [
+                        Icon(Icons.attach_money, size: 16, color: Colors.grey[600]),
+                        const SizedBox(width: 4),
+                        Text(
+                          '\$${job.budget}',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (isEmployer && onEdit != null) ...[
+                    InkWell(
+                      onTap: onEdit,
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Icon(Icons.edit, color: Colors.blue),
+                      ),
+                    ),
+                  ],
+                  if (isEmployer && onDelete != null) ...[
+                    InkWell(
+                      onTap: onDelete,
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Icon(Icons.delete, color: Colors.red),
+                      ),
+                    ),
+                  ],
+                  if (!isEmployer && onApply != null && job.status == JobStatus.active) ...[
+                    ElevatedButton(
+                      onPressed: onApply,
+                      child: const Text('Apply Now'),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(JobStatus status) {
+    Color color;
+    String text;
+
+    switch (status) {
+      case JobStatus.active:
+        color = Colors.green;
+        text = 'Active';
+        break;
+      case JobStatus.filled:
+        color = Colors.blue;
+        text = 'Filled';
+        break;
+      case JobStatus.expired:
+        color = Colors.red;
+        text = 'Expired';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+// lib/widgets/profile_card.dart
+import 'package:flutter/material.dart';
+import 'package:gig_marketplace/models/job_application.dart';
+
+class ProfileCard extends StatelessWidget {
+  final JobApplication application;
+  final VoidCallback onTap;
+  final VoidCallback? onShortlist;
+  final VoidCallback? onReject;
+  final VoidCallback? onMessage;
+  final VoidCallback? onDownloadResume;
+
+  const ProfileCard({
+    Key? key,
+    required this.application,
+    required this.onTap,
+    this.onShortlist,
+    this.onReject,
+    this.onMessage,
+    this.onDownloadResume,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 2,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundImage: application.employeeProfilePicture != null
+                        ? NetworkImage(application.employeeProfilePicture!)
+                        : null,
+                    child: application.employeeProfilePicture == null
+                        ? const Icon(Icons.person)
+                        : null,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          application.employeeName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            _buildRatingStars(application.employeeRating),
+                            const SizedBox(width: 8),
+                            if (application.employeeRating != null)
+                              Text(
+                                '(${application.employeeRating!.toStringAsFixed(1)})',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildStatusChip(application.status),
+                ],
+              ),
+              if (application.coverLetter != null && application.coverLetter!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Cover Letter:',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  application.coverLetter!,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.grey[800],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (onDownloadResume != null && application.resumeUrl != null) ...[
+                    IconButton(
+                      onPressed: onDownloadResume,
+                      icon: const Icon(Icons.file_download, color: Colors.blue),
+                      tooltip: 'Download Resume',
+                    ),
+                  ],
+                  if (onMessage != null) ...[
+                    IconButton(
+                      onPressed: onMessage,
+                      icon: const Icon(Icons.message, color: Colors.green),
+                      tooltip: 'Message',
+                    ),
+                  ],
+                  if (onShortlist != null && application.status == ApplicationStatus.pending) ...[
+                    ElevatedButton(
+                      onPressed: onShortlist,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                      ),
+                      child: const Text('Shortlist'),
+                    ),
+                  ],
+                  if (onReject != null && 
+                      (application.status == ApplicationStatus.pending || 
+                       application.status == ApplicationStatus.shortlisted)) ...[
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: onReject,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      child: const Text('Reject'),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRatingStars(double? rating) {
+    if (rating == null) return const SizedBox();
+
+    return Row(
+      children: List.generate(5, (index) {
+        Icon starIcon;
+        if (index < rating) {
+          starIcon = Icon(
+            Icons.star,
+            color: Colors.amber,
+            size: 16,
+          );
+        } else {
+          starIcon = Icon(
+            Icons.star_border,
+            color: Colors.amber,
+            size: 16,
+          );
+        }
+        return starIcon;
+      }),
+    );
+  }
+
+  Widget _buildStatusChip(ApplicationStatus status) {
+    Color color;
+    String text;
+
+    switch (status) {
+      case ApplicationStatus.pending:
+        color = Colors.grey;
+        text = 'Pending';
+        break;
+      case ApplicationStatus.shortlisted:
+        color = Colors.amber;
+        text = 'Shortlisted';
+        break;
+      case ApplicationStatus.rejected:
+        color = Colors.red;
+        text = 'Rejected';
+        break;
+      case ApplicationStatus.hired:
+        color = Colors.green;
+        text = 'Hired';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+// lib/widgets/rating_widget.dart
+import 'package:flutter/material.dart';
+
+class RatingWidget extends StatelessWidget {
+  final double rating;
+  final double size;
+  final Function(double)? onRatingChanged;
+
+  const RatingWidget({
+    Key? key,
+    required this.rating,
+    this.size = 24,
+    this.onRatingChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(5, (index) {
+        return GestureDetector(
+          onTap: onRatingChanged != null ? () => onRatingChanged!(index + 1) : null,
+          child: Icon(
+            index < rating ? Icons.star : Icons.star_border,
+            color: Colors.amber,
+            size: size,
+          ),
+        );
+      }),
+    );
+  }
+}
+
+// lib/widgets/application_status_chip.dart
+import 'package:flutter/material.dart';
+import 'package:gig_marketplace/models/job_application.dart';
+
+class ApplicationStatusChip extends StatelessWidget {
+  final ApplicationStatus status;
+  final double fontSize;
+
+  const ApplicationStatusChip({
+    Key? key,
+    required this.status,
+    this.fontSize = 12,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    Color color;
+    String text;
+
+    switch (status) {
+      case ApplicationStatus.pending:
+        color = Colors.grey;
+        text = 'Pending';
+        break;
+      case ApplicationStatus.shortlisted:
+        color = Colors.amber;
+        text = 'Shortlisted';
+        break;
+      case ApplicationStatus.rejected:
+        color = Colors.red;
+        text = 'Rejected';
+        break;
+      case ApplicationStatus.hired:
+        color = Colors.green;
+        text = 'Hired';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: fontSize,
+        ),
+      ),
+    );
+  }
+}
+
+// lib/widgets/chat_bubble.dart
+import 'package:flutter/material.dart';
+import 'package:gig_marketplace/models/message.dart';
+import 'package:intl/intl.dart';
+
+class ChatBubble extends StatelessWidget {
+  final Message message;
+  final bool isCurrentUser;
+
+  const ChatBubble({
+    Key? key,
+    required this.message,
+    required this.isCurrentUser,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        padding: const EdgeInsets.all(12),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        decoration: BoxDecoration(
+          color: isCurrentUser ? Colors.blue : Colors.grey[200],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message.content,
+              style: TextStyle(
+                color: isCurrentUser ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Text(
+                DateFormat('h:mm a').format(message.sentAt),
+                style: TextStyle(
+                  color: isCurrentUser ? Colors.white70 : Colors.grey[600],
+                  fontSize: 10,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// lib/widgets/conversation_list_item.dart
+import 'package:flutter/material.dart';
+import 'package:gig_marketplace/models/message.dart';
+import 'package:intl/intl.dart';
+
+class ConversationListItem extends StatelessWidget {
+  final Conversation conversation;
+  final VoidCallback onTap;
+
+  const ConversationListItem({
+    Key? key,
+    required this.conversation,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: conversation.unreadCount > 0 
+              ? Colors.blue.withOpacity(0.05) 
+              : Colors.transparent,
+          border: Border(
+            bottom: BorderSide(
+              color: Colors.grey[200]!,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundImage: conversation.userProfilePicture != null
+                  ? NetworkImage(conversation.userProfilePicture!)
+                  : null,
+              child: conversation.userProfilePicture == null
+                  ? const Icon(Icons.person)
+                  : null,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        conversation.userFullName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        DateFormat('MMM d').format(conversation.lastMessage.sentAt),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          conversation.lastMessage.content,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                      if (conversation.unreadCount > 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.blue,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            conversation.unreadCount.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
