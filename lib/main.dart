@@ -1,14 +1,21 @@
-// main.dart
+// lib/main.dart
+import 'dart:js';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gig_marketplace/bloc/auth_bloc.dart';
+import 'package:gig_marketplace/pages/created_jobs_page.dart';
 import 'package:gig_marketplace/pages/signin_page.dart';
-import 'package:gig_marketplace/repositories/auth_repository.dart';
+import 'package:gig_marketplace/pages/signup_page.dart';
+// import 'package:gig_marketplace/repositories/auth_repository.dart';
+import 'package:gig_marketplace/repositories/mock_auth_repository.dart';
+
 import 'package:gig_marketplace/repositories/job_repository.dart';
 import 'package:gig_marketplace/repositories/user_repository.dart';
 import 'package:gig_marketplace/repositories/application_repository.dart';
 import 'package:gig_marketplace/repositories/messaging_repository.dart';
 import 'package:gig_marketplace/services/api_service.dart';
+import 'package:gig_marketplace/services/mock_auth_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,7 +28,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Create shared instances of services and repositories
     final apiService = ApiService();
-    final authRepository = AuthRepository(apiService: apiService);
+    final mockAuthService = MockAuthService();
+    final authRepository = MockAuthRepository(apiService: apiService);
     final userRepository = UserRepository(apiService: apiService);
     final jobRepository = JobRepository(apiService: apiService);
     final applicationRepository = ApplicationRepository(apiService: apiService);
@@ -30,7 +38,8 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(
-          create: (context) => AuthBloc(authRepository: authRepository),
+          create: (context) => AuthBloc(authRepository: authRepository)
+            ..add(CheckAuthStatusEvent()), // Add check auth status event
         ),
         // Add other BLoCs as needed
       ],
@@ -39,7 +48,7 @@ class MyApp extends StatelessWidget {
           RepositoryProvider<ApiService>(
             create: (context) => apiService,
           ),
-          RepositoryProvider<AuthRepository>(
+          RepositoryProvider<MockAuthRepository>(
             create: (context) => authRepository,
           ),
           RepositoryProvider<UserRepository>(
@@ -76,7 +85,8 @@ class MyApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Colors.red, width: 2.0),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
@@ -87,7 +97,32 @@ class MyApp extends StatelessWidget {
               ),
             ),
           ),
-          home: const SignInPage(),
+          home: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              // Show splash screen while checking auth status
+              if (state is AuthLoading || state is AuthInitial) {
+                return const Scaffold(
+                  body: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              // If authenticated, navigate directly to CreatedJobsPage
+              if (state is AuthAuthenticated) {
+                return const CreatedJobsPage();
+              }
+
+              // Default to sign in page
+              return const SignInPage();
+            },
+          ),
+          routes: {
+            '/signin': (context) => const SignInPage(),
+            '/signup': (context) => const SignUpPage(),
+            '/home': (context) => const CreatedJobsPage()
+            // Add more routes as needed
+          },
         ),
       ),
     );

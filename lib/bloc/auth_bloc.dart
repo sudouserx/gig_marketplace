@@ -1,7 +1,8 @@
 // lib/bloc/auth_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gig_marketplace/models/user.dart';
-import 'package:gig_marketplace/repositories/auth_repository.dart';
+// import 'package:gig_marketplace/repositories/auth_repository.dart';
+import 'package:gig_marketplace/repositories/mock_auth_repository.dart';
 
 // Events
 abstract class AuthEvent {}
@@ -62,7 +63,7 @@ class AuthError extends AuthState {
 
 // BLoC
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepository authRepository;
+  final MockAuthRepository authRepository;
 
   AuthBloc({required this.authRepository}) : super(AuthInitial()) {
     on<SignInEvent>(_onSignIn);
@@ -110,7 +111,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onCheckAuthStatus(CheckAuthStatusEvent event, Emitter<AuthState> emit) async {
+  Future<void> _onCheckAuthStatus(
+      CheckAuthStatusEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       final user = await authRepository.getCurrentUser();

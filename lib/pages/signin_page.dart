@@ -39,9 +39,9 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sign In'),
-      ),
+      // appBar: AppBar(
+      //   title: const Text('Sign In'),
+      // ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
@@ -60,7 +60,7 @@ class _SignInPageState extends State<SignInPage> {
           if (state is AuthLoading) {
             return const LoadingIndicator(message: 'Signing in...');
           }
-          
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Form(
@@ -69,7 +69,7 @@ class _SignInPageState extends State<SignInPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 40),
-                  
+
                   // Logo or app name
                   const Icon(
                     Icons.business_center,
@@ -85,7 +85,7 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  
+
                   FormContainer(
                     children: [
                       InputField(
@@ -99,7 +99,8 @@ class _SignInPageState extends State<SignInPage> {
                             return 'Please enter your email';
                           }
                           // Basic email validation
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                              .hasMatch(value)) {
                             return 'Please enter a valid email';
                           }
                           return null;
@@ -113,7 +114,9 @@ class _SignInPageState extends State<SignInPage> {
                         isRequired: true,
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                            _isPasswordVisible
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                           onPressed: () {
                             setState(() {
@@ -145,7 +148,7 @@ class _SignInPageState extends State<SignInPage> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
