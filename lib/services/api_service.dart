@@ -7,22 +7,23 @@ import 'package:mime/mime.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  final String baseUrl = 'https://your-api-url.com/api';
+  final String baseUrl =
+      'https://194d-2a09-bac5-3fd9-1a46-00-29e-9.ngrok-free.app/api';
   String? _cachedToken;
-  
+
   // Get auth token (either from cache or storage)
   Future<String?> _getAuthToken() async {
     if (_cachedToken != null) {
       return _cachedToken;
     }
-    
+
     // This creates a circular dependency but we'll fix it with a provider
     // See note below about fixing this
     final prefs = await SharedPreferences.getInstance();
     _cachedToken = prefs.getString('auth_token');
     return _cachedToken;
   }
-  
+
   // Handle response and extract data or throw error
   dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -33,11 +34,11 @@ class ApiService {
       throw Exception(message);
     }
   }
-  
+
   // Helper to get headers
   Future<Map<String, String>> _getHeaders({bool requiresAuth = false}) async {
     final headers = {'Content-Type': 'application/json'};
-    
+
     if (requiresAuth) {
       final token = await _getAuthToken();
       if (token == null) {
@@ -45,46 +46,76 @@ class ApiService {
       }
       headers['Authorization'] = 'Bearer $token';
     }
-    
+
     return headers;
   }
-  
+
   // GET request
+// GET request
   Future<dynamic> get({
     required String endpoint,
     Map<String, dynamic>? queryParams,
     bool requiresAuth = false,
   }) async {
-    String url = '$baseUrl$endpoint';
-    
-    // Add query parameters if they exist
-    if (queryParams != null && queryParams.isNotEmpty) {
-      final queryString = Uri(queryParameters: 
-        queryParams.map((key, value) => MapEntry(key, value.toString()))
-      ).query;
-      url = '$url?$queryString';
-    }
-    
+    // Ensure endpoint doesn't start with a slash since baseUrl already has /api
+    final formattedEndpoint =
+        endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+
+    // Construct the full URL properly
+    final uri = Uri.parse('$baseUrl/$formattedEndpoint').replace(
+      queryParameters: queryParams?.map((k, v) => MapEntry(k, v.toString())),
+    );
+
+    print('GET request to: $uri'); // Debug log
+
     final headers = await _getHeaders(requiresAuth: requiresAuth);
-    final response = await http.get(Uri.parse(url), headers: headers);
+    final response = await http.get(uri, headers: headers);
+
+    print('Response status: ${response.statusCode}'); // Debug log
+    print('Response body: ${response.body}'); // Debug log
+
     return _handleResponse(response);
   }
-  
+
   // POST request
   Future<dynamic> post({
     required String endpoint,
     Map<String, dynamic>? body,
     bool requiresAuth = false,
   }) async {
-    final headers = await _getHeaders(requiresAuth: requiresAuth);
-    final response = await http.post(
-      Uri.parse('$baseUrl$endpoint'),
-      headers: headers,
-      body: body != null ? jsonEncode(body) : null,
-    );
-    return _handleResponse(response);
+    try {
+      print('Sending POST request to: $baseUrl$endpoint');
+      print('Request body: ${body != null ? jsonEncode(body) : 'null'}');
+
+      final headers = await _getHeaders(requiresAuth: requiresAuth);
+      print('Request headers: $headers');
+
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl$endpoint'),
+            headers: headers,
+            body: body != null ? jsonEncode(body) : null,
+          )
+          .timeout(const Duration(seconds: 15));
+
+      print('Response status: ${response.statusCode}');
+      print('Response headers: ${response.headers}');
+      print('Response body: ${response.body}');
+
+      return _handleResponse(response);
+    } on SocketException catch (e) {
+      print('SocketException: ${e.toString()}');
+      throw Exception(
+          'Network error: No internet connection. Please check your connection and try again.');
+    } on http.ClientException catch (e) {
+      print('ClientException: ${e.toString()}');
+      throw Exception('Network error: ${e.message}');
+    } catch (e) {
+      print('Unexpected error: ${e.toString()}');
+      throw Exception('Network error: ${e.toString()}');
+    }
   }
-  
+
   // PUT request
   Future<dynamic> put({
     required String endpoint,
@@ -99,7 +130,7 @@ class ApiService {
     );
     return _handleResponse(response);
   }
-  
+
   // PATCH request
   Future<dynamic> patch({
     required String endpoint,
@@ -114,7 +145,7 @@ class ApiService {
     );
     return _handleResponse(response);
   }
-  
+
   // DELETE request
   Future<dynamic> delete({
     required String endpoint,
@@ -129,7 +160,7 @@ class ApiService {
     );
     return _handleResponse(response);
   }
-  
+
   // Multipart request (for file uploads)
   Future<dynamic> multipartRequest({
     required String method,
@@ -143,7 +174,7 @@ class ApiService {
       method,
       Uri.parse('$baseUrl$endpoint'),
     );
-    
+
     // Add authorization header if required
     if (requiresAuth) {
       final token = await _getAuthToken();
@@ -152,14 +183,14 @@ class ApiService {
       }
       request.headers['Authorization'] = 'Bearer $token';
     }
-    
+
     // Add text fields if they exist
     if (fields != null) {
       fields.forEach((key, value) {
         request.fields[key] = value.toString();
       });
     }
-    
+
     // Add single files if they exist
     if (files != null) {
       await Future.forEach(files.entries, (MapEntry<String, File> entry) async {
@@ -173,13 +204,14 @@ class ApiService {
         request.files.add(multipartFile);
       });
     }
-    
+
     // Add multiple files if they exist
     if (multipleFiles != null) {
-      await Future.forEach(multipleFiles.entries, (MapEntry<String, List<File>> entry) async {
+      await Future.forEach(multipleFiles.entries,
+          (MapEntry<String, List<File>> entry) async {
         final fieldName = entry.key;
         final fileList = entry.value;
-        
+
         for (final file in fileList) {
           final mimeType = lookupMimeType(file.path);
           final multipartFile = await http.MultipartFile.fromPath(
@@ -191,7 +223,7 @@ class ApiService {
         }
       });
     }
-    
+
     // Send the request
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);

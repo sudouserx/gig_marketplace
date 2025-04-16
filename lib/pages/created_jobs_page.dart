@@ -4,6 +4,8 @@ import 'package:gig_marketplace/widgets/job_card.dart';
 import 'package:gig_marketplace/widgets/loading_indicator.dart';
 import 'package:gig_marketplace/widgets/error_display.dart';
 import 'package:gig_marketplace/widgets/custom_button.dart';
+import 'package:gig_marketplace/pages/create_job_page.dart';
+import 'package:gig_marketplace/pages/job_detail_page.dart';
 
 class CreatedJobsPage extends StatefulWidget {
   const CreatedJobsPage({Key? key}) : super(key: key);
@@ -12,7 +14,8 @@ class CreatedJobsPage extends StatefulWidget {
   _CreatedJobsPageState createState() => _CreatedJobsPageState();
 }
 
-class _CreatedJobsPageState extends State<CreatedJobsPage> with SingleTickerProviderStateMixin {
+class _CreatedJobsPageState extends State<CreatedJobsPage>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   bool _hasError = false;
   String _errorMessage = '';
@@ -43,7 +46,7 @@ class _CreatedJobsPageState extends State<CreatedJobsPage> with SingleTickerProv
     try {
       // In a real app, you would call an API or service to get jobs
       // final jobs = await jobService.getEmployerJobs();
-      
+
       // Mock delay to simulate network request
       await Future.delayed(const Duration(seconds: 1));
 
@@ -52,7 +55,8 @@ class _CreatedJobsPageState extends State<CreatedJobsPage> with SingleTickerProv
         Job(
           id: '1',
           title: 'UI/UX Designer Needed for Mobile App',
-          description: 'We are looking for a talented UI/UX designer to help us design a mobile app for a fitness tracking platform.',
+          description:
+              'We are looking for a talented UI/UX designer to help us design a mobile app for a fitness tracking platform.',
           category: 'Design',
           location: 'New York',
           isRemote: false,
@@ -66,7 +70,8 @@ class _CreatedJobsPageState extends State<CreatedJobsPage> with SingleTickerProv
         Job(
           id: '2',
           title: 'Frontend Developer for E-commerce Website',
-          description: 'Looking for an experienced frontend developer to build a responsive e-commerce website using React.',
+          description:
+              'Looking for an experienced frontend developer to build a responsive e-commerce website using React.',
           category: 'Development',
           location: '',
           isRemote: true,
@@ -80,7 +85,8 @@ class _CreatedJobsPageState extends State<CreatedJobsPage> with SingleTickerProv
         Job(
           id: '3',
           title: 'Content Writer for Blog Posts',
-          description: 'Need a skilled content writer to create engaging blog posts on technology topics.',
+          description:
+              'Need a skilled content writer to create engaging blog posts on technology topics.',
           category: 'Writing',
           location: 'London',
           isRemote: false,
@@ -94,7 +100,8 @@ class _CreatedJobsPageState extends State<CreatedJobsPage> with SingleTickerProv
         Job(
           id: '4',
           title: 'Social Media Manager',
-          description: 'Looking for a social media specialist to manage our company profiles on various platforms.',
+          description:
+              'Looking for a social media specialist to manage our company profiles on various platforms.',
           category: 'Marketing',
           location: '',
           isRemote: true,
@@ -225,7 +232,8 @@ class _CreatedJobsPageState extends State<CreatedJobsPage> with SingleTickerProv
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Navigate to create job page
-          // Navigator.push(context, MaterialPageRoute(builder: (context) => CreateJobPage()));
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => CreateJobPage()));
         },
         child: const Icon(Icons.add),
         tooltip: 'Create New Job',
@@ -286,7 +294,10 @@ class _CreatedJobsPageState extends State<CreatedJobsPage> with SingleTickerProv
             isEmployer: true,
             onTap: () {
               // Navigate to job details
-              // Navigator.push(context, MaterialPageRoute(builder: (context) => JobDetailsPage(jobId: job.id)));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => DetailJobPage(jobId: job.id)));
             },
             onEdit: job.status != JobStatus.expired
                 ? () {
@@ -308,7 +319,8 @@ class _CreatedJobsPageState extends State<CreatedJobsPage> with SingleTickerProv
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Job Posting'),
-        content: Text('Are you sure you want to delete "${job.title}"? This action cannot be undone.'),
+        content: Text(
+            'Are you sure you want to delete "${job.title}"? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -336,10 +348,10 @@ class _CreatedJobsPageState extends State<CreatedJobsPage> with SingleTickerProv
 
       // In a real app, you would call an API to delete the job
       // await jobService.deleteJob(jobId);
-      
+
       // Mock delay to simulate network request
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       // For now, just remove from the local list
       setState(() {
         _jobs.removeWhere((job) => job.id == jobId);
@@ -360,7 +372,7 @@ class _CreatedJobsPageState extends State<CreatedJobsPage> with SingleTickerProv
       setState(() {
         _isLoading = false;
       });
-      
+
       // Show error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

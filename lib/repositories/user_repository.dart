@@ -12,10 +12,11 @@ class UserRepository {
   Future<User> getUserProfile(String userId) async {
     try {
       final response = await apiService.get(
-        endpoint: '/users/$userId',
-        requiresAuth: true,
+        endpoint: '/auth/users/$userId',
+        // requiresAuth: true,
       );
 
+      print(response);
       return User.fromJson(response['data']);
     } catch (e) {
       throw Exception('Failed to get user profile: ${e.toString()}');
@@ -37,7 +38,7 @@ class UserRepository {
       // Create form data for multipart request
       final Map<String, dynamic> fields = {};
       final Map<String, File> files = {};
-      
+
       // Add text fields if they exist
       if (fullName != null) fields['fullName'] = fullName;
       if (phoneNumber != null) fields['phoneNumber'] = phoneNumber;
