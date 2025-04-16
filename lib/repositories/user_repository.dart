@@ -1,5 +1,7 @@
 // lib/repositories/user_repository.dart
 import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:gig_marketplace/models/user.dart';
 import 'package:gig_marketplace/services/api_service.dart';
 
@@ -8,18 +10,50 @@ class UserRepository {
 
   UserRepository({required this.apiService});
 
-  // Get user profile by ID
+// In user_repository.dart
   Future<User> getUserProfile(String userId) async {
     try {
-      final response = await apiService.get(
-        endpoint: '/auth/users/$userId',
-        // requiresAuth: true,
+      // Try a direct HTTP request instead of using the service
+      final response = await http.get(
+        Uri.parse(
+            'https://adjusted-fish-finally.ngrok-free.app/api/auth/users/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
       );
 
-      print(response);
-      return User.fromJson(response['data']);
+      print('Direct request status: ${response.statusCode}');
+      print('Direct request headers: ${response.headers}');
+      print('Direct request body preview: ${response.body}');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        try {
+          final userData = jsonDecode(response.body);
+          return User.fromJson(userData);
+        } catch (e) {
+          print('JSON parse error in direct request: $e');
+          throw Exception('Failed to parse JSON response from direct request');
+        }
+      } else {
+        throw Exception(
+            'Direct request failed with status: ${response.statusCode}');
+      }
     } catch (e) {
-      throw Exception('Failed to get user profile: ${e.toString()}');
+      print('Error in direct user profile request: $e');
+
+      // If the direct request fails, fall back to the original method
+      try {
+        final response = await apiService.get(
+          endpoint: '/auth/users/$userId',
+          additionalHeaders: {'Accept': 'application/json'},
+        );
+
+        return User.fromJson(response);
+      } catch (e) {
+        print('Error getting user profile via service: $e');
+        throw Exception('Failed to get user profile: ${e.toString()}');
+      }
     }
   }
 

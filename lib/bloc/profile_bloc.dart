@@ -69,7 +69,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<UpdateProfileEvent>(_onUpdateProfile);
   }
 
-  Future<void> _onLoadProfile(LoadProfileEvent event, Emitter<ProfileState> emit) async {
+  Future<void> _onLoadProfile(
+      LoadProfileEvent event, Emitter<ProfileState> emit) async {
     emit(ProfileLoading());
     try {
       final user = await userRepository.getUserProfile(event.userId);
@@ -79,7 +80,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     }
   }
 
-  Future<void> _onUpdateProfile(UpdateProfileEvent event, Emitter<ProfileState> emit) async {
+  Future<void> _onUpdateProfile(
+      UpdateProfileEvent event, Emitter<ProfileState> emit) async {
     emit(ProfileLoading());
     try {
       final user = await userRepository.updateUserProfile(

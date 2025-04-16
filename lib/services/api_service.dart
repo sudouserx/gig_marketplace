@@ -7,8 +7,7 @@ import 'package:mime/mime.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  final String baseUrl =
-      'https://194d-2a09-bac5-3fd9-1a46-00-29e-9.ngrok-free.app/api';
+  final String baseUrl = 'https://adjusted-fish-finally.ngrok-free.app/api';
   String? _cachedToken;
 
   // Get auth token (either from cache or storage)
@@ -36,8 +35,14 @@ class ApiService {
   }
 
   // Helper to get headers
-  Future<Map<String, String>> _getHeaders({bool requiresAuth = false}) async {
+  Future<Map<String, String>> _getHeaders({
+    bool requiresAuth = false,
+    Map<String, String>? additionalHeaders,
+  }) async {
     final headers = {'Content-Type': 'application/json'};
+
+    // Add Accept header to explicitly request JSON
+    headers['Accept'] = 'application/json';
 
     if (requiresAuth) {
       final token = await _getAuthToken();
@@ -47,34 +52,58 @@ class ApiService {
       headers['Authorization'] = 'Bearer $token';
     }
 
+    // Add any additional headers
+    if (additionalHeaders != null) {
+      headers.addAll(additionalHeaders);
+    }
+
     return headers;
   }
 
-  // GET request
-// GET request
+// In api_service.dart, modify the get method
   Future<dynamic> get({
     required String endpoint,
     Map<String, dynamic>? queryParams,
     bool requiresAuth = false,
+    Map<String, String>? additionalHeaders,
   }) async {
-    // Ensure endpoint doesn't start with a slash since baseUrl already has /api
-    final formattedEndpoint =
-        endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    try {
+      final headers = await _getHeaders(
+        requiresAuth: requiresAuth,
+        additionalHeaders: additionalHeaders,
+      );
 
-    // Construct the full URL properly
-    final uri = Uri.parse('$baseUrl/$formattedEndpoint').replace(
-      queryParameters: queryParams?.map((k, v) => MapEntry(k, v.toString())),
-    );
+      final uri = Uri.parse('$baseUrl$endpoint');
 
-    print('GET request to: $uri'); // Debug log
+      print('Sending GET request to: $uri');
+      print('Request headers: $headers');
 
-    final headers = await _getHeaders(requiresAuth: requiresAuth);
-    final response = await http.get(uri, headers: headers);
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 15));
 
-    print('Response status: ${response.statusCode}'); // Debug log
-    print('Response body: ${response.body}'); // Debug log
+      print('Response status: ${response.statusCode}');
+      print('Response headers: ${response.headers}');
 
-    return _handleResponse(response);
+      // For debugging, print the full response body
+      print('Full response body:');
+      print(response.body);
+
+      // Try to parse the response
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        try {
+          return jsonDecode(response.body);
+        } catch (e) {
+          print('JSON parse error: $e');
+          throw Exception('Failed to parse JSON response');
+        }
+      } else {
+        throw Exception('Request failed with status: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('GET Request Error: ${e.toString()}');
+      rethrow;
+    }
   }
 
   // POST request
