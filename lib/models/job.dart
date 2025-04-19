@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 enum JobStatus { active, filled, expired }
 
 class Job {
-  final String id;
+  final String jobId;
   final String employerId;
   final String title;
   final String description;
@@ -17,10 +17,10 @@ class Job {
   final JobStatus status;
   final DateTime createdAt;
   final List<String>? mediaUrls;
-  final int applicantCount;
+  final List<String>? applicants;
 
   Job({
-    required this.id,
+    required this.jobId,
     required this.employerId,
     required this.title,
     required this.description,
@@ -33,31 +33,31 @@ class Job {
     required this.status,
     required this.createdAt,
     this.mediaUrls,
-    this.applicantCount = 0,
+    this.applicants = const [],
   });
 
   factory Job.fromJson(Map<String, dynamic> json) {
     return Job(
-      id: json['id'],
-      employerId: json['employerId'],
-      title: json['title'],
-      description: json['description'],
-      category: json['category'],
-      tags: List<String>.from(json['tags']),
-      location: json['location'],
-      isRemote: json['isRemote'],
-      deadline: DateTime.parse(json['deadline']),
+      jobId: json['_id'] ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      category: json['category'] ?? '',
+      tags: List<String>.from(json['tags'] ?? []),
+      location: json['location'] ?? '',
+      isRemote: json['isRemote'] ?? false,
+      deadline: json['deadline'] != null ? DateTime.parse(json['deadline']) : DateTime.now(),
       budget: json['budget']?.toDouble(),
-      status: _parseJobStatus(json['status']),
-      createdAt: DateTime.parse(json['createdAt']),
-      mediaUrls: json['mediaUrls'] != null ? List<String>.from(json['mediaUrls']) : null,
-      applicantCount: json['applicantCount'] ?? 0,
+      mediaUrls: List<String>.from(json['mediaUrls'] ?? []),
+      employerId: json['employerId'] ?? '',
+      applicants: List<String>.from(json['applicants'] ?? []),
+      status: _parseJobStatus(json['status'] ?? 'active'),
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'jobId': jobId,
       'employerId': employerId,
       'title': title,
       'description': description,
@@ -70,7 +70,7 @@ class Job {
       'status': _jobStatusToString(status),
       'createdAt': createdAt.toIso8601String(),
       'mediaUrls': mediaUrls,
-      'applicantCount': applicantCount,
+      'applicants': applicants,
     };
   }
 

@@ -7,12 +7,11 @@ import 'package:gig_marketplace/widgets/custom_button.dart';
 import 'package:gig_marketplace/widgets/error_display.dart';
 import 'package:gig_marketplace/widgets/loading_indicator.dart';
 import 'package:gig_marketplace/widgets/application_status_chip.dart';
+import 'package:gig_marketplace/repositories/auth_repository.dart';
 import 'package:intl/intl.dart';
 
 class AppliedJobsPage extends StatefulWidget {
-  final User currentUser;
-
-  const AppliedJobsPage({Key? key, required this.currentUser}) : super(key: key);
+  const AppliedJobsPage({Key? key}) : super(key: key);
 
   @override
   State<AppliedJobsPage> createState() => _AppliedJobsPageState();
@@ -23,13 +22,38 @@ class _AppliedJobsPageState extends State<AppliedJobsPage> {
   String _statusFilter = 'All';
   final List<String> _statusOptions = ['All', 'Pending', 'Shortlisted', 'Rejected', 'Hired'];
   final TextEditingController _searchController = TextEditingController();
+  User? _currentUser;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    context.read<ApplicationBloc>().add(
-          LoadAppliedJobsEvent(employeeId: widget.currentUser.id),
+    _loadCurrentUser();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    try {
+      final authRepository = RepositoryProvider.of<AuthRepository>(context);
+      final user = await authRepository.getCurrentUser();
+      
+      setState(() {
+        _currentUser = user;
+        _isLoading = false;
+      });
+      
+      if (user != null) {
+        context.read<ApplicationBloc>().add(
+          LoadAppliedJobsEvent(employeeId: user.id),
         );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load user: ${e.toString()}')),
+      );
+    }
   }
 
   @override
@@ -54,6 +78,54 @@ class _AppliedJobsPageState extends State<AppliedJobsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Applied Jobs'),
+          elevation: 0,
+        ),
+        body: const LoadingIndicator(message: 'Loading user information...'),
+      );
+    }
+
+    if (_currentUser == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Applied Jobs'),
+          elevation: 0,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 80,
+                color: Colors.red[300],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Not authenticated. Please sign in.',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24),
+              CustomButton(
+                text: 'Go to Sign In',
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/signin');
+                },
+                backgroundColor: Theme.of(context).primaryColor,
+                width: 200,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Applied Jobs'),
@@ -76,7 +148,7 @@ class _AppliedJobsPageState extends State<AppliedJobsPage> {
                   return ErrorDisplay(
                     errorMessage: state.message,
                     onRetry: () => context.read<ApplicationBloc>().add(
-                          LoadAppliedJobsEvent(employeeId: widget.currentUser.id),
+                          LoadAppliedJobsEvent(employeeId: _currentUser!.id),
                         ),
                   );
                 }

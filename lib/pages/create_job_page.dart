@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gig_marketplace/models/job.dart';
+import 'package:gig_marketplace/models/user.dart';
+import 'package:gig_marketplace/repositories/auth_repository.dart';
+import 'package:gig_marketplace/repositories/job_repository.dart';
+import 'package:gig_marketplace/services/api_service.dart';
 import 'package:gig_marketplace/widgets/custom_button.dart';
 import 'package:gig_marketplace/widgets/form_container.dart';
 import 'package:gig_marketplace/widgets/input_field.dart';
@@ -30,6 +35,8 @@ class _CreateJobPageState extends State<CreateJobPage> {
   bool _hasError = false;
   String _errorMessage = '';
   List<String> _tags = [];
+  User? _currentUser;
+
 
   // Sample categories - in a real app, these would come from an API or database
   final List<String> _categories = [
@@ -46,6 +53,8 @@ class _CreateJobPageState extends State<CreateJobPage> {
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
+    
     if (widget.jobToEdit != null) {
       // Pre-fill form fields if we're editing an existing job
       _titleController.text = widget.jobToEdit!.title;
@@ -59,6 +68,26 @@ class _CreateJobPageState extends State<CreateJobPage> {
       _isRemote = widget.jobToEdit!.isRemote;
       _tags = List<String>.from(widget.jobToEdit!.tags);
       _tagsController.text = _tags.join(', ');
+    }
+  }
+
+    Future<void> _loadCurrentUser() async {
+    try {
+      final authRepository = RepositoryProvider.of<AuthRepository>(context);
+      final user = await authRepository.getCurrentUser();
+      
+      setState(() {
+        _currentUser = user;
+        _isLoading = false;
+      });
+  
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load user: ${e.toString()}')),
+      );
     }
   }
 
@@ -109,9 +138,12 @@ class _CreateJobPageState extends State<CreateJobPage> {
       });
 
       try {
+
+        String currentUserId = _currentUser!.id;
+
         // Create job object - updated to match the Job model
         final job = Job(
-          id: widget.jobToEdit?.id ?? 'new_job_id',
+          jobId: widget.jobToEdit?.jobId ?? 'new_job_id',
           title: _titleController.text,
           description: _descriptionController.text,
           category: _selectedCategory,
@@ -122,17 +154,43 @@ class _CreateJobPageState extends State<CreateJobPage> {
           tags: _tags,
           status: widget.jobToEdit?.status ?? JobStatus.active,
           createdAt: widget.jobToEdit?.createdAt ?? DateTime.now(),
-          employerId: widget.jobToEdit?.employerId ?? 'current_user_id',
+          employerId: widget.jobToEdit?.employerId ?? currentUserId, // Use actual user ID
           // Include additional fields that might be needed
-          mediaUrls: widget.jobToEdit?.mediaUrls,
-          applicantCount: widget.jobToEdit?.applicantCount ?? 0,
+          mediaUrls: widget.jobToEdit?.mediaUrls ?? [],
+          applicants: widget.jobToEdit?.applicants ?? [],
         );
 
         // In a real app, you would save this to your backend
-        // await jobService.createOrUpdateJob(job);
+        final myApiService = ApiService();
+        final jobRepository = JobRepository(apiService: myApiService);
         
-        // Mock delay to simulate network request
-        await Future.delayed(const Duration(seconds: 1));
+        if (widget.jobToEdit != null) {
+          // Update existing job
+          await jobRepository.updateJob(
+            jobId: job.jobId,
+            title: job.title,
+            description: job.description,
+            category: job.category,
+            tags: job.tags,
+            location: job.location,
+            isRemote: job.isRemote,
+            deadline: job.deadline,
+            budget: job.budget,
+          );
+        } else {
+          // Create new job
+          await jobRepository.createJob(
+            employerId: job.employerId,
+            title: job.title,
+            description: job.description,
+            category: job.category,
+            tags: job.tags,
+            location: job.location,
+            isRemote: job.isRemote,
+            deadline: job.deadline,
+            budget: job.budget,
+          );
+        }
 
         if (mounted) {
           // Return the created/updated job to the previous screen
@@ -151,7 +209,9 @@ class _CreateJobPageState extends State<CreateJobPage> {
           setState(() {
             _isLoading = false;
             _hasError = true;
-            _errorMessage = 'Failed to submit job. Please try again.';
+            _errorMessage = error.toString().contains('User not authenticated') 
+                ? 'You must be logged in to create a job' 
+                : 'Failed to submit job. Please try again.';
           });
         }
       }

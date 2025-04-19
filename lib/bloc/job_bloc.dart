@@ -30,7 +30,7 @@ class CreateJobEvent extends JobEvent {
   final bool isRemote;
   final DateTime deadline;
   final double? budget;
-  final List<File>? mediaFiles;
+  final List<File>? mediaUrls;
 
   CreateJobEvent({
     required this.employerId,
@@ -42,7 +42,7 @@ class CreateJobEvent extends JobEvent {
     required this.isRemote,
     required this.deadline,
     this.budget,
-    this.mediaFiles,
+    this.mediaUrls,
   });
 }
 
@@ -56,7 +56,7 @@ class UpdateJobEvent extends JobEvent {
   final bool? isRemote;
   final DateTime? deadline;
   final double? budget;
-  final List<File>? mediaFiles;
+  final List<File>? mediaUrls;
 
   UpdateJobEvent({
     required this.jobId,
@@ -68,7 +68,7 @@ class UpdateJobEvent extends JobEvent {
     this.isRemote,
     this.deadline,
     this.budget,
-    this.mediaFiles,
+    this.mediaUrls,
   });
 }
 
@@ -164,7 +164,7 @@ class JobBloc extends Bloc<JobEvent, JobState> {
         isRemote: event.isRemote,
         deadline: event.deadline,
         budget: event.budget,
-        mediaFiles: event.mediaFiles,
+        mediaUrls: event.mediaUrls,
       );
       emit(JobOperationSuccess(message: 'Job created successfully'));
     } catch (e) {
@@ -185,7 +185,7 @@ class JobBloc extends Bloc<JobEvent, JobState> {
         isRemote: event.isRemote,
         deadline: event.deadline,
         budget: event.budget,
-        mediaFiles: event.mediaFiles,
+        mediaUrls: event.mediaUrls,
       );
       emit(JobOperationSuccess(message: 'Job updated successfully'));
     } catch (e) {

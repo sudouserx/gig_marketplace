@@ -1,5 +1,6 @@
 // lib/repositories/job_repository.dart
 import 'dart:io';
+import 'dart:js_interop';
 import 'package:gig_marketplace/models/job.dart';
 import 'package:gig_marketplace/services/api_service.dart';
 
@@ -16,9 +17,14 @@ class JobRepository {
         queryParams: filters,
         requiresAuth: true,
       );
-
+      // Extract the data array from the response
       final List<dynamic> jobsData = response['data'];
-      return jobsData.map((jobData) => Job.fromJson(jobData)).toList();
+
+      // Make sure we're properly iterating through each job in the data array
+      final check = jobsData.map((jobData) => Job.fromJson(jobData)).toList();
+      print("check at the job repository: $check");
+      return check;
+
     } catch (e) {
       throw Exception('Failed to get jobs: ${e.toString()}');
     }
@@ -28,7 +34,7 @@ class JobRepository {
   Future<List<Job>> getEmployerJobs({required String employerId, Map<String, dynamic>? filters}) async {
     try {
       final response = await apiService.get(
-        endpoint: '/employers/$employerId/jobs',
+        endpoint: '/jobs/employers/$employerId/jobs',
         queryParams: filters,
         requiresAuth: true,
       );
@@ -51,7 +57,7 @@ class JobRepository {
     required bool isRemote,
     required DateTime deadline,
     double? budget,
-    List<File>? mediaFiles,
+    List<File>? mediaUrls,
   }) async {
     try {
       // Create form data for multipart request
@@ -60,7 +66,7 @@ class JobRepository {
         'title': title,
         'description': description,
         'category': category,
-        'tags': tags.toString(), // ApiService will handle the JSON encoding
+        'tags': tags, // ApiService will handle the JSON encoding
         'location': location,
         'isRemote': isRemote.toString(),
         'deadline': deadline.toIso8601String(),
@@ -69,8 +75,8 @@ class JobRepository {
       if (budget != null) fields['budget'] = budget.toString();
       
       final Map<String, List<File>> multipleFiles = {};
-      if (mediaFiles != null && mediaFiles.isNotEmpty) {
-        multipleFiles['mediaFiles'] = mediaFiles;
+      if (mediaUrls != null && mediaUrls.isNotEmpty) {
+        multipleFiles['mediaUrls'] = mediaUrls;
       }
 
       final response = await apiService.multipartRequest(
@@ -98,7 +104,7 @@ class JobRepository {
     bool? isRemote,
     DateTime? deadline,
     double? budget,
-    List<File>? mediaFiles,
+    List<File>? mediaUrls,
   }) async {
     try {
       // Create form data for multipart request
@@ -114,8 +120,8 @@ class JobRepository {
       if (budget != null) fields['budget'] = budget.toString();
       
       final Map<String, List<File>> multipleFiles = {};
-      if (mediaFiles != null && mediaFiles.isNotEmpty) {
-        multipleFiles['mediaFiles'] = mediaFiles;
+      if (mediaUrls != null && mediaUrls.isNotEmpty) {
+        multipleFiles['mediaUrls'] = mediaUrls;
       }
 
       final response = await apiService.multipartRequest(
@@ -151,6 +157,7 @@ class JobRepository {
         endpoint: '/jobs/$jobId',
         requiresAuth: true,
       );
+      
 
       return Job.fromJson(response['data']);
     } catch (e) {

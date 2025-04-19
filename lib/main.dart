@@ -7,6 +7,12 @@ import 'package:gig_marketplace/bloc/auth_bloc.dart';
 import 'package:gig_marketplace/bloc/job_bloc.dart';
 import 'package:gig_marketplace/bloc/profile_bloc.dart';
 import 'package:gig_marketplace/bloc/application_bloc.dart';
+import 'package:gig_marketplace/models/job.dart';
+import 'package:gig_marketplace/models/user.dart';
+import 'package:gig_marketplace/pages/ChatbotPage.dart';
+import 'package:gig_marketplace/pages/HomePage.dart';
+import 'package:gig_marketplace/pages/applied_jobs_page.dart';
+import 'package:gig_marketplace/pages/create_job_page.dart';
 
 import 'package:gig_marketplace/pages/created_jobs_page.dart';
 import 'package:gig_marketplace/pages/profile_page.dart';
@@ -30,6 +36,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+
   const MyApp({Key? key}) : super(key: key);
 
   @override
@@ -42,6 +49,7 @@ class MyApp extends StatelessWidget {
     final jobRepository = JobRepository(apiService: apiService);
     final applicationRepository = ApplicationRepository(apiService: apiService);
     final messagingRepository = MessagingRepository(apiService: apiService);
+
 
     return MultiBlocProvider(
       providers: [
@@ -132,7 +140,7 @@ class MyApp extends StatelessWidget {
 
                 // return const CreatedJobsPage();
                 // return const JobListingPage(isEmployer: true);
-                return const ProfilePage();
+                return const HomePage();
               }
 
               // Default to sign in page
@@ -142,8 +150,19 @@ class MyApp extends StatelessWidget {
           routes: {
             '/signin': (context) => const SignInPage(),
             '/signup': (context) => const SignUpPage(),
-            '/home': (context) => const ProfilePage(),
+            '/home': (context) => const HomePage(),
+            '/chatbot': (context) => const ChatbotPage(),
+            '/jobs' : (context) => const JobListingPage(isEmployer: false),
+            // '/messages' : (context) => const Messa
+            '/applied-jobs': (context) => const AppliedJobsPage(),
             '/profile': (context) => const ProfilePage(),
+            '/created-jobs': (context) => const CreatedJobsPage(),
+            // '/create-job': (context) {
+            //   // Retrieve the argument which may be a Job instance or null.
+            //   final job = ModalRoute.of(context)?.settings.arguments as Job?;
+            //   return CreateJobPage(jobToEdit: job);
+            // },
+
             '/job-details': (context) {
               final args = ModalRoute.of(context)!.settings.arguments
                   as Map<String, dynamic>;

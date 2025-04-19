@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gig_marketplace/models/job.dart';
+import 'package:gig_marketplace/models/user.dart';
+import 'package:gig_marketplace/repositories/auth_repository.dart';
+import 'package:gig_marketplace/repositories/job_repository.dart';
+import 'package:gig_marketplace/services/api_service.dart';
 import 'package:gig_marketplace/widgets/job_card.dart';
 import 'package:gig_marketplace/widgets/loading_indicator.dart';
 import 'package:gig_marketplace/widgets/error_display.dart';
@@ -22,12 +27,36 @@ class _CreatedJobsPageState extends State<CreatedJobsPage>
   List<Job> _jobs = [];
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  User? _currentUser;
+
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _loadJobs();
+    _loadCurrentUser();
+
+  }
+
+      Future<void> _loadCurrentUser() async {
+    try {
+      final authRepository = RepositoryProvider.of<AuthRepository>(context);
+      final user = await authRepository.getCurrentUser();
+      
+      setState(() {
+        _currentUser = user;
+        _isLoading = false;
+      });
+  
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load user: ${e.toString()}')),
+      );
+    }
   }
 
   @override
@@ -45,77 +74,14 @@ class _CreatedJobsPageState extends State<CreatedJobsPage>
 
     try {
       // In a real app, you would call an API or service to get jobs
-      // final jobs = await jobService.getEmployerJobs();
-
-      // Mock delay to simulate network request
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Sample job data - updated to match Job model constructor
-      final List<Job> mockJobs = [
-        Job(
-          id: '1',
-          title: 'UI/UX Designer Needed for Mobile App',
-          description:
-              'We are looking for a talented UI/UX designer to help us design a mobile app for a fitness tracking platform.',
-          category: 'Design',
-          location: 'New York',
-          isRemote: false,
-          deadline: DateTime.now().add(const Duration(days: 14)),
-          budget: 2500,
-          tags: ['UI', 'UX', 'Mobile', 'Fitness'],
-          status: JobStatus.active,
-          createdAt: DateTime.now().subtract(const Duration(days: 2)),
-          employerId: 'current_user_id',
-        ),
-        Job(
-          id: '2',
-          title: 'Frontend Developer for E-commerce Website',
-          description:
-              'Looking for an experienced frontend developer to build a responsive e-commerce website using React.',
-          category: 'Development',
-          location: '',
-          isRemote: true,
-          deadline: DateTime.now().add(const Duration(days: 30)),
-          budget: 5000,
-          tags: ['React', 'Frontend', 'E-commerce'],
-          status: JobStatus.active,
-          createdAt: DateTime.now().subtract(const Duration(days: 5)),
-          employerId: 'current_user_id',
-        ),
-        Job(
-          id: '3',
-          title: 'Content Writer for Blog Posts',
-          description:
-              'Need a skilled content writer to create engaging blog posts on technology topics.',
-          category: 'Writing',
-          location: 'London',
-          isRemote: false,
-          deadline: DateTime.now().add(const Duration(days: 7)),
-          budget: 1000,
-          tags: ['Content', 'Blog', 'Technology'],
-          status: JobStatus.filled,
-          createdAt: DateTime.now().subtract(const Duration(days: 10)),
-          employerId: 'current_user_id',
-        ),
-        Job(
-          id: '4',
-          title: 'Social Media Manager',
-          description:
-              'Looking for a social media specialist to manage our company profiles on various platforms.',
-          category: 'Marketing',
-          location: '',
-          isRemote: true,
-          deadline: DateTime.now().subtract(const Duration(days: 5)),
-          budget: 1800,
-          tags: ['Social Media', 'Marketing', 'Content Creation'],
-          status: JobStatus.expired,
-          createdAt: DateTime.now().subtract(const Duration(days: 20)),
-          employerId: 'current_user_id',
-        ),
-      ];
+      final myApiService = ApiService();
+      final jobRepository = JobRepository(apiService: myApiService);
+      final jobs = await jobRepository.getEmployerJobs(
+        employerId: _currentUser!.id, // Replace with actual user ID
+      );
 
       setState(() {
-        _jobs = mockJobs;
+        _jobs = jobs;
         _isLoading = false;
       });
     } catch (error) {
@@ -171,14 +137,6 @@ class _CreatedJobsPageState extends State<CreatedJobsPage>
             icon: const Icon(Icons.refresh),
             onPressed: _loadJobs,
             tooltip: 'Refresh',
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              // Navigate to create job page
-              // Navigator.push(context, MaterialPageRoute(builder: (context) => CreateJobPage()));
-            },
-            tooltip: 'Create Job',
           ),
         ],
         bottom: TabBar(
@@ -297,7 +255,7 @@ class _CreatedJobsPageState extends State<CreatedJobsPage>
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => DetailJobPage(jobId: job.id)));
+                      builder: (context) => DetailJobPage(jobId: job.jobId)));
             },
             onEdit: job.status != JobStatus.expired
                 ? () {
@@ -329,7 +287,7 @@ class _CreatedJobsPageState extends State<CreatedJobsPage>
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              _deleteJob(job.id);
+              _deleteJob(job.jobId);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),
@@ -354,7 +312,7 @@ class _CreatedJobsPageState extends State<CreatedJobsPage>
 
       // For now, just remove from the local list
       setState(() {
-        _jobs.removeWhere((job) => job.id == jobId);
+        _jobs.removeWhere((job) => job.jobId == jobId);
         _isLoading = false;
       });
 

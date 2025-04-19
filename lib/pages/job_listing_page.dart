@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gig_marketplace/models/job.dart';
+import 'package:gig_marketplace/repositories/job_repository.dart';
+import 'package:gig_marketplace/services/api_service.dart';
 import 'package:gig_marketplace/widgets/job_card.dart';
 import 'package:gig_marketplace/widgets/loading_indicator.dart';
 import 'package:gig_marketplace/widgets/error_display.dart';
@@ -62,59 +64,64 @@ class _JobListingPageState extends State<JobListingPage> {
 
     try {
       // In a real app, you would call an API or service to get jobs
-      // final jobs = await jobService.getJobs();
+      final myApiService = ApiService();
+      final jobRepository = JobRepository(apiService: myApiService);
+      final jobs = await jobRepository.getJobs();
+
+      print("job listing page list $jobs");
+
       
       // Mock delay to simulate network request
       await Future.delayed(const Duration(seconds: 1));
 
     // Update the mockJobs list in the _loadJobs method
-    final List<Job> mockJobs = [
-      Job(
-        id: '1',
-        employerId: 'employer_1',
-        title: 'UI/UX Designer Needed for Mobile App',
-        description: 'We are looking for a talented UI/UX designer to help us design a mobile app for a fitness tracking platform.',
-        category: 'Design',
-        tags: ['UI', 'UX', 'Mobile', 'Fitness'],
-        location: 'New York',
-        isRemote: false,
-        deadline: DateTime.now().add(const Duration(days: 14)),
-        budget: 2500,
-        status: JobStatus.active,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)), // Changed from postedDate to createdAt
-      ),
-      Job(
-        id: '2',
-        employerId: 'employer_2',
-        title: 'Frontend Developer for E-commerce Website',
-        description: 'Looking for an experienced frontend developer to build a responsive e-commerce website using React.',
-        category: 'Development',
-        tags: ['React', 'Frontend', 'E-commerce'],
-        location: '',
-        isRemote: true,
-        deadline: DateTime.now().add(const Duration(days: 30)),
-        budget: 5000,
-        status: JobStatus.active,
-        createdAt: DateTime.now().subtract(const Duration(days: 5)), // Changed from postedDate to createdAt
-      ),
-      Job(
-        id: '3',
-        employerId: 'employer_1',
-        title: 'Content Writer for Blog Posts',
-        description: 'Need a skilled content writer to create engaging blog posts on technology topics.',
-        category: 'Writing',
-        tags: ['Content', 'Blog', 'Technology'],
-        location: 'London',
-        isRemote: false,
-        deadline: DateTime.now().add(const Duration(days: 7)),
-        budget: 1000,
-        status: JobStatus.filled,
-        createdAt: DateTime.now().subtract(const Duration(days: 10)), // Changed from postedDate to createdAt
-      ),
-    ];
+    // final List<Job> mockJobs = [
+      // Job(
+      //   id: '1',
+      //   employerId: 'employer_1',
+      //   title: 'UI/UX Designer Needed for Mobile App',
+      //   description: 'We are looking for a talented UI/UX designer to help us design a mobile app for a fitness tracking platform.',
+      //   category: 'Design',
+      //   tags: ['UI', 'UX', 'Mobile', 'Fitness'],
+      //   location: 'New York',
+      //   isRemote: false,
+      //   deadline: DateTime.now().add(const Duration(days: 14)),
+      //   budget: 2500,
+      //   status: JobStatus.active,
+      //   createdAt: DateTime.now().subtract(const Duration(days: 2)), // Changed from postedDate to createdAt
+      // ),
+      // Job(
+      //   id: '2',
+      //   employerId: 'employer_2',
+      //   title: 'Frontend Developer for E-commerce Website',
+      //   description: 'Looking for an experienced frontend developer to build a responsive e-commerce website using React.',
+      //   category: 'Development',
+      //   tags: ['React', 'Frontend', 'E-commerce'],
+      //   location: '',
+      //   isRemote: true,
+      //   deadline: DateTime.now().add(const Duration(days: 30)),
+      //   budget: 5000,
+      //   status: JobStatus.active,
+      //   createdAt: DateTime.now().subtract(const Duration(days: 5)), // Changed from postedDate to createdAt
+      // ),
+      // Job(
+      //   id: '3',
+      //   employerId: 'employer_1',
+      //   title: 'Content Writer for Blog Posts',
+      //   description: 'Need a skilled content writer to create engaging blog posts on technology topics.',
+      //   category: 'Writing',
+      //   tags: ['Content', 'Blog', 'Technology'],
+      //   location: 'London',
+      //   isRemote: false,
+      //   deadline: DateTime.now().add(const Duration(days: 7)),
+      //   budget: 1000,
+      //   status: JobStatus.filled,
+      //   createdAt: DateTime.now().subtract(const Duration(days: 10)), // Changed from postedDate to createdAt
+      // ),
+    // ];
 
       setState(() {
-        _jobs = mockJobs;
+        _jobs = jobs;
         _isLoading = false;
       });
     } catch (error) {
@@ -426,7 +433,7 @@ class _JobListingPageState extends State<JobListingPage> {
                                           // Delete job (in a real app, call API)
                                           Navigator.pop(context);
                                           setState(() {
-                                            _jobs.removeWhere((j) => j.id == job.id);
+                                            _jobs.removeWhere((j) => j.jobId == job.jobId);
                                           });
                                         },
                                         child: const Text('Delete', style: TextStyle(color: Colors.red)),

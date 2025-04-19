@@ -7,7 +7,7 @@ import 'package:mime/mime.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  final String baseUrl = 'https://adjusted-fish-finally.ngrok-free.app/api';
+  final String baseUrl = 'http://localhost:5000/api';
   String? _cachedToken;
 
   // Get auth token (either from cache or storage)

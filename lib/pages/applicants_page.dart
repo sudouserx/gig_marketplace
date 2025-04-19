@@ -27,7 +27,7 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
   @override
   void initState() {
     super.initState();
-    context.read<ApplicationBloc>().add(LoadJobApplicantsEvent(jobId: widget.job.id));
+    context.read<ApplicationBloc>().add(LoadJobApplicantsEvent(jobId: widget.job.jobId));
   }
 
   @override
@@ -110,7 +110,7 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
               SnackBar(content: Text(state.message)),
             );
             // Reload applicants after status update
-            context.read<ApplicationBloc>().add(LoadJobApplicantsEvent(jobId: widget.job.id));
+            context.read<ApplicationBloc>().add(LoadJobApplicantsEvent(jobId: widget.job.jobId));
           } else if (state is ApplicationError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: Colors.red),
@@ -232,7 +232,7 @@ class _ApplicantsPageState extends State<ApplicantsPage> {
             return ErrorDisplay(
               errorMessage: state.message,
               onRetry: () {
-                context.read<ApplicationBloc>().add(LoadJobApplicantsEvent(jobId: widget.job.id));
+                context.read<ApplicationBloc>().add(LoadJobApplicantsEvent(jobId: widget.job.jobId));
               },
             );
           } else {
