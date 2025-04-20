@@ -7,7 +7,7 @@ import 'package:mime/mime.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  final String baseUrl = 'http://localhost:5000/api';
+  final String baseUrl = 'https://gig-backend.vercel.app/api';
   String? _cachedToken;
 
   // Get auth token (either from cache or storage)

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gig_marketplace/models/user.dart';
 import 'package:gig_marketplace/repositories/auth_repository.dart';
+import 'package:gig_marketplace/widgets/BottomNavBar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -56,6 +57,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   User? _currentUser;
   bool _isLoading = true;
+  int _currentNavIndex = 0;
 
   @override
   void initState() {
@@ -78,6 +80,26 @@ class _HomePageState extends State<HomePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load user: ${e.toString()}')),
       );
+    }
+  }
+
+  void _handleNavTap(int index) {
+    if (index != _currentNavIndex) {
+      setState(() {
+        _currentNavIndex = index;
+      });
+      
+      switch (index) {
+        case 1:
+          Navigator.pushNamed(context, '/jobs');
+          break;
+        case 2:
+          Navigator.pushNamed(context, '/messages');
+          break;
+        case 3:
+          Navigator.pushNamed(context, '/profile');
+          break;
+      }
     }
   }
 
@@ -117,6 +139,7 @@ class _HomePageState extends State<HomePage> {
                     _buildGridMenuSection(context),
                     const SizedBox(height: 30),
                     _buildRecentActivitySection(),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -129,42 +152,9 @@ class _HomePageState extends State<HomePage> {
         child: const Icon(Icons.chat_bubble_outline),
         tooltip: 'AI Chatbot',
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: const Color(0xFF2A3990),
-        unselectedItemColor: Colors.grey,
-        currentIndex: 0,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work_outline),
-            label: 'Jobs',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message_outlined),
-            label: 'Messages',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
-          ),
-        ],
-        onTap: (index) {
-          switch (index) {
-            case 1:
-              Navigator.pushNamed(context, '/jobs');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/messages');
-              break;
-            case 3:
-              Navigator.pushNamed(context, '/profile');
-              break;
-          }
-        },
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _currentNavIndex,
+        onTap: _handleNavTap,
       ),
     );
   }
@@ -200,7 +190,9 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 10),
           Text(
-            'Find your perfect job opportunity today',
+            _currentUser?.role == UserRole.employer 
+                ? 'Find talented professionals for your opportunities' 
+                : 'Find your perfect job opportunity today',
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: 14,
@@ -227,6 +219,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildGridMenuSection(BuildContext context) {
+    final bool isEmployer = _currentUser?.role == UserRole.employer;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -246,40 +240,69 @@ class _HomePageState extends State<HomePage> {
           childAspectRatio: 1.5,
           crossAxisSpacing: 15,
           mainAxisSpacing: 15,
-          children: [
-            _buildGridItem(
-              context,
-              'Jobs Listing',
-              Icons.work_outlined,
-              const Color(0xFFE3F2FD),
-              const Color(0xFF2196F3),
-              '/jobs',
-            ),
-            _buildGridItem(
-              context,
-              'My Applications',
-              Icons.description_outlined,
-              const Color(0xFFE8F5E9),
-              const Color(0xFF4CAF50),
-              '/applied-jobs',
-            ),
-            _buildGridItem(
-              context,
-              'Created Jobs',
-              Icons.post_add_outlined,
-              const Color(0xFFFFF8E1),
-              const Color(0xFFFFC107),
-              '/created-jobs',
-            ),
-            _buildGridItem(
-              context,
-              'Messages',
-              Icons.message_outlined,
-              const Color(0xFFE1F5FE),
-              const Color(0xFF03A9F4),
-              '/messages',
-            ),
-          ],
+          children: isEmployer
+              ? [
+                  // For Employer
+                  _buildGridItem(
+                    context,
+                    'Create Job',
+                    Icons.add_box_outlined,
+                    const Color(0xFFE8F5E9),
+                    const Color(0xFF4CAF50),
+                    '/create-job',
+                  ),
+                  _buildGridItem(
+                    context,
+                    'Created Jobs',
+                    Icons.post_add_outlined,
+                    const Color(0xFFFFF8E1),
+                    const Color(0xFFFFC107),
+                    '/created-jobs',
+                  ),
+                  _buildGridItem(
+                    context,
+                    'Jobs Listing',
+                    Icons.work_outlined,
+                    const Color(0xFFE3F2FD),
+                    const Color(0xFF2196F3),
+                    '/jobs',
+                  ),
+                  _buildGridItem(
+                    context,
+                    'Messages',
+                    Icons.message_outlined,
+                    const Color(0xFFE1F5FE),
+                    const Color(0xFF03A9F4),
+                    '/messages',
+                  ),
+                ]
+              : [
+                  // For Employee
+                  _buildGridItem(
+                    context,
+                    'Applied Jobs',
+                    Icons.description_outlined,
+                    const Color(0xFFE8F5E9),
+                    const Color(0xFF4CAF50),
+                    '/applied-jobs',
+                  ),
+                  _buildGridItem(
+                    context,
+                    'Jobs Listing',
+                    Icons.work_outlined,
+                    const Color(0xFFE3F2FD),
+                    const Color(0xFF2196F3),
+                    '/jobs',
+                  ),
+                  _buildGridItem(
+                    context,
+                    'Messages',
+                    Icons.message_outlined,
+                    const Color(0xFFE1F5FE),
+                    const Color(0xFF03A9F4),
+                    '/messages',
+                  ),
+                ],
         ),
       ],
     );
@@ -339,6 +362,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildRecentActivitySection() {
+    final bool isEmployer = _currentUser?.role == UserRole.employer;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -351,24 +376,45 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         const SizedBox(height: 15),
-        _buildActivityItem(
-          'UI/UX Designer',
-          'Google Inc.',
-          'Applied 2 days ago',
-          Colors.blue,
-        ),
-        _buildActivityItem(
-          'Flutter Developer',
-          'Microsoft',
-          'Interview scheduled on May 22',
-          Colors.green,
-        ),
-        _buildActivityItem(
-          'Product Manager',
-          'Apple Inc.',
-          'New message received',
-          Colors.orange,
-        ),
+        if (isEmployer) ...[
+          _buildActivityItem(
+            'Senior Developer',
+            'Posted 3 days ago',
+            '4 applications received',
+            Colors.blue,
+          ),
+          _buildActivityItem(
+            'Product Manager',
+            'Posted 5 days ago',
+            'Interview scheduled with Alex',
+            Colors.green,
+          ),
+          _buildActivityItem(
+            'UI/UX Designer',
+            'Posted 1 week ago',
+            'New candidate message',
+            Colors.orange,
+          ),
+        ] else ...[
+          _buildActivityItem(
+            'UI/UX Designer',
+            'Google Inc.',
+            'Applied 2 days ago',
+            Colors.blue,
+          ),
+          _buildActivityItem(
+            'Flutter Developer',
+            'Microsoft',
+            'Interview scheduled on May 22',
+            Colors.green,
+          ),
+          _buildActivityItem(
+            'Product Manager',
+            'Apple Inc.',
+            'New message received',
+            Colors.orange,
+          ),
+        ],
       ],
     );
   }
